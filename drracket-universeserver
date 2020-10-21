@@ -1,0 +1,24 @@
+#lang racket
+(require 2htdp/universe)
+
+(define START-STATE (list))
+
+(define (new-h u-model world)
+  (list* world u-model))
+
+(define (disconnect-h u-model world)
+  (remove world u-model))
+
+(define (message-h u-model world message)
+  (make-bundle u-model
+               (for/list ([w (in-list u-model)])
+                 (make-mail w message))
+               empty))
+
+
+(universe START-STATE
+          (on-new new-h)
+          (on-msg message-h)
+          (on-disconnect disconnect-h)
+          (state #f))
+
