@@ -1,0 +1,100 @@
+(require picturing-programs)
+
+(define-struct game (lights select))
+
+(define box (square 50 "outline" "black"))
+
+(define yc (circle 24.5 "solid" "yellow"))
+
+(define bc (circle 25 "outline" "black"))
+
+(define (posn=? p1 p2)
+  (and (= (posn-x p1) (posn-x p2))
+       (= (posn-y p1) (posn-y p2))))
+
+(define (game->posn posn) 
+  (make-posn (+ -25 (* 50 (posn-x posn)))
+             (- 275 (* 50 (posn-y posn)))))
+
+(define (posn->game posn)
+  (make-posn (+ 1 (floor (/ (posn-x posn) 50)))
+             (- 5 (floor (/ (posn-y posn) 50)))))
+
+(define (mapplace posn img)
+  (place-image yc
+               (posn-x (game->posn posn)) (posn-y (game->posn posn))
+               img))
+
+(define (map n)
+  (vert n (hori n)))
+
+(define (hori n)
+  (cond [(>= 0 n) (square 0 "solid" "black")]
+        [else (beside (overlay bc box)
+                      (hori (- n 1)))]))
+
+(define (vert n img)
+  (cond [(>= 0 n) (square 0 "solid" "black")]
+        [else (above img
+                     (vert (- n 1) img))]))
+
+(define (mapplacer posnlist)
+  (cond [(empty? posnlist) (map 5)]
+        [else (mapplace (first posnlist)
+                        (mapplacer (rest posnlist)))]))
+
+(define (in-list? lights posn)
+  (cond [(empty? lights) #false]
+        [(posn=? posn (first lights)) #true]
+        [else (in-list? (rest lights) posn)]))
+
+(define (posns posn)
+  (list (make-posn (+ (posn-x posn) 1) (posn-y posn))
+        (make-posn (+ (posn-x posn) -1) (posn-y posn))
+        (make-posn (posn-x posn) (+ (posn-y posn) 1))
+        (make-posn (posn-x posn) (+ (posn-y posn) -1))
+        posn))
+
+(define (posn-checker posnlist)
+  (cond [(empty? posnlist) '()]
+        [(or (<= 6 (posn-x (first posnlist)))
+             (<= 6 (posn-y (first posnlist)))
+             (>= 0 (posn-x (first posnlist)))
+             (>= 0 (posn-y (first posnlist)))) (append '() (posn-checker (rest posnlist)))]
+        [else (append (list (first posnlist))
+                      (posn-checker (rest posnlist)))]))
+
+(define (switchh lights posn)
+  (cond [(in-list? lights posn) (remove posn lights)]
+        [else (list* posn lights)]))
+
+(define (switch lights posnlist)
+  (cond [(empty? posnlist) lights]
+        [else (switch (switchh lights (first posnlist)) (rest posnlist))]))
+
+(define (mouse-h struct x y event)
+  (cond [(mouse=? event "button-down") (make-game (switch (game-lights struct) (posn-checker (posns (posn->game (make-posn x y)))))
+                                                  (posn->game (make-posn x y)))]
+        [else struct]))
+
+(define (draw-h struct)
+  (mapplacer (game-lights struct)))
+
+(define (end struct)
+  (empty? (game-lights struct)))
+
+(define (winscreen struct)
+  (overlay (text "You Won" 30 "green")
+           (draw-h struct)))
+
+(big-bang (make-game (list (make-posn 2 2)
+                           (make-posn 1 2)
+                           (make-posn 2 1)
+                           (make-posn 3 2)
+                           (make-posn 2 3)
+                           (make-posn 1 1)
+                           (make-posn 3 4))
+                     (make-posn 1 1))
+  (on-draw draw-h)
+  (on-mouse mouse-h)
+  (stop-when end winscreen))
