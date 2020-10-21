@@ -1,0 +1,40 @@
+(require picturing-programs)
+(require 2htdp/universe)
+
+(define-struct wor (c l))
+
+(define (draw-list l)
+  (cond [(empty? (rest l)) (square 50 "solid" (first l))]
+        [else (beside (square 50 "solid" (first l)) (draw-list (rest l)))]))
+
+(define (draw-h str)
+  (overlay (above (square 50 "solid" (wor-c str))
+                  (square 50 "solid" "white")
+                  (draw-list (wor-l str)))
+           (square 600 "solid" "white")))
+
+
+
+(define (key-h str k)
+  (cond [(string=? k "q") (make-package str "NO")]
+        [else (make-package str (wor-c str))]))
+
+(define (check l)
+  (cond [(> (length l) 10) (reverse (rest (reverse l)))]
+        [else l]))
+
+(define (receive-h str m)
+  (cond [(string=? m "NO") (exit)]
+        [else (make-wor (wor-c str) (check (list* m (wor-l str))))]))
+
+(define (mbb n c l)
+  (big-bang (make-wor c l)
+    (on-draw draw-h)
+    (on-key key-h)
+    (on-receive receive-h)
+    (register LOCALHOST)
+    (name n)
+    (close-on-stop true)
+    (state false)))
+
+(launch-many-worlds (mbb "A" "Red" (list "white")) (mbb "B" "Green" (list "white")) (mbb "C" "Blue" (list "white")))
