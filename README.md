@@ -1,0 +1,2 @@
+# highschoolprojects
+DrRacket files with the word universe in them will require the usage of "drracket-universeserver" to be run along with the files.
