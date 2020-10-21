@@ -1,0 +1,57 @@
+(define (fib n)
+  (cond
+    [(< n 2) 1]
+    [else (+ (fib (- n 1)) (fib (- n 2)))]))
+
+(define (fibsum n)
+  (cond
+    [(< n 1) 1]
+    [else (+ (fibsum (- n 1)) (fib n))]))
+
+(define (num-digits n)
+  (cond
+    [(< n 10) 1]
+    [else (+ 1 (num-digits (quotient n 10)))]))
+
+(define (sum-digits n)
+  (cond
+    [(< n 10) n]
+    [else (+ (sum-digits (quotient n 10)) (remainder n 10))]))
+
+(define (sum-cubes n)
+  (cond
+    [(< n 2) 1]
+    [else (+ (sum-cubes (- n 1)) (expt n 3))]))
+
+(define (vblock n img)
+  (cond
+    [(< n 2) img]
+    [else (above (vblock (- n 1) img) img)]))
+
+(define (hblock n img)
+  (cond
+    [(< n 2) img]
+    [else (beside (hblock (- n 1) img) img)]))
+
+(define (grid r c img)
+  (vblock c (hblock r img)))
+
+(define (add-sqrt s e)
+  (cond
+    [(< e s) 0]
+    [else (+ (add-sqrt s (- e 1)) (sqrt e))]))
+
+(define (loh word)
+  (cond
+    [(= (string-length word) 1) (string-append word "-")]
+    [else (string-append (string-ith word 0) "-" (loh (substring word 1)))]))
+
+(define (ten-circle s e)
+  (cond
+    [(< e s) (circle 0 "solid" "transparent")]
+    [else (overlay (circle s "outline" "black")(ten-circle (+ s 10) e))]))
+
+(define (harmonic s e)
+  (cond
+    [(< e s) 0]
+    [else (+ (harmonic (+ s 1) e) (/ 1 s))]))
