@@ -1,0 +1,33 @@
+(require 2htdp/universe)
+(require picturing-programs)
+
+(define-struct wor (id col))
+
+(define (draw-h str)
+  (overlay (text (wor-id str) 24 "black")
+           (square 500 "solid" (wor-col str))))
+
+(define (key-h str k)
+  (make-package str (wor-id str)))
+
+(define (ccheck str m)
+  (cond [(string=? (wor-id str) m) "green"]
+        [else "yellow"]))
+
+(define (receive-h str m)
+  (make-wor (wor-id str) (ccheck str m)))
+
+(define (mbb id col n)
+  (big-bang (make-wor id col)
+    (on-draw draw-h)
+    (on-key key-h)
+    (on-receive receive-h)
+    (register LOCALHOST)
+    (name n)
+    (close-on-stop true)
+    (state false)))
+
+(launch-many-worlds (mbb "1" "red" "A") (mbb "2" "red" "B") (mbb "3" "red" "C"))
+
+
+    
