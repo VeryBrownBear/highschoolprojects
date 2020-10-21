@@ -1,0 +1,25 @@
+(define (posn=? posn1 posn2)
+  (and (= (posn-x posn1) (posn-x posn2))
+       (= (posn-y posn1) (posn-y posn2))))
+
+(define (add-posns posn1 posn2)
+  (make-posn (+ (posn-x posn2) (posn-x posn1))
+             (+ (posn-y posn2) (posn-y posn1))))
+
+(define (sub-posns posn1 posn2)
+  (make-posn (- (posn-x posn1) (posn-x posn2))
+             (- (posn-y posn1) (posn-y posn2))))
+
+(define (scale-posn num posn)
+  (make-posn (* (posn-x posn) num) (* (posn-y posn) num)))
+
+(define (distance posn1 posn2)
+  (sqrt (+ (sqr (- (posn-x posn2) (posn-x posn1))) (sqr (- (posn-y posn2) (posn-y posn2))))))
+
+(define (place-image/posn img posn bg)
+  (place-image
+   img
+   (posn-x posn) (posn-y posn)
+   bg))
+
+(provide (all-defined-out))
