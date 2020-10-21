@@ -1,0 +1,59 @@
+(define-struct G (red-pt blue-pt active))
+
+(define example-1
+  (make-G (make-posn 100 200)
+          (make-posn 300 150)
+          "red"))
+
+(define example-2
+  (make-G (make-posn 130 210)
+          (make-posn 300 150)
+          "red"))
+
+(define (move-active game pt)
+  (cond
+    [(string=? (G-active game) "red") (make-G pt (G-blue-pt game) (G-active game))]
+    [else (make-G (G-red-pt game) pt (G-active game))]))
+
+(check-expect (move-active example-1 (make-posn 130 210))
+              example-2)
+
+(define (draw-game game)
+  (place-image
+   (circle 20 "solid" "red")
+   (posn-x (G-red-pt game)) (posn-y (G-red-pt game))
+   (place-image
+    (circle 30 "solid" "blue")
+    (posn-x (G-blue-pt game)) (posn-y (G-blue-pt game))
+    (empty-scene 500 300))))
+
+(define (maybe-activate game pt)
+  (cond
+    [(<= (distf (posn-x pt) (posn-y pt) (posn-x (G-red-pt game)) (posn-y (G-red-pt game))) 20) (make-G (G-red-pt game) (G-blue-pt game) "red")]
+    [(<= (distf (posn-x pt) (posn-y pt) (posn-x (G-blue-pt game)) (posn-y (G-blue-pt game))) 20) (make-G (G-red-pt game) (G-blue-pt game) "blue")]
+    [else (make-G (G-red-pt game) (G-blue-pt game) (G-active game))]))
+
+(define (mouse-h game x y event)
+  (cond
+    [(string=? event "button-down") (maybe-activate game (make-posn x y))]
+    [(string=? event "drag") (move-active game (make-posn x y))]
+    [else (make-G (G-red-pt game) (G-blue-pt game) (G-active game))]))
+
+(define (key-h game key)
+  (cond
+    [(string=? key "q") (make-G (make-posn 1000 1000) (make-posn -1000 -1000) "pink")]
+    [else (make-G (G-red-pt game) (G-blue-pt game) (G-active game))]))
+
+(define (quit? game)
+  (posn=? (G-red-pt game) (make-posn 1000 1000)))
+
+(define (draw-done game)
+  (overlay (text "quitter" 24 "red")
+           (rectangle 500 300 "outline" "transparent")))
+
+(big-bang
+    example-1
+  (on-mouse mouse-h)
+  (on-key key-h)
+  (on-draw draw-game)
+  (stop-when quit? draw-done))
