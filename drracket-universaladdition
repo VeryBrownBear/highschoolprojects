@@ -1,0 +1,31 @@
+(require picturing-programs)
+(require 2htdp/universe)
+
+(define-struct wor (n t))
+
+(define (draw-h str)
+  (overlay/align "left" "top" (text (number->string (wor-n str)) 24 "black")
+                 (overlay (text (number->string (wor-t str)) 48 "black")
+                          (square 500 "solid" "yellow"))))
+
+(define (key-h str k)
+  (make-package str
+                (wor-n str)))
+
+(define (receive-k str m)
+  (make-wor (wor-n str)
+            (+ (wor-t str) m)))
+
+(define (m-big-bang str n)
+  (big-bang str
+    (on-draw draw-h)
+    (on-key key-h)
+    (on-receive receive-k)
+    (register LOCALHOST)
+    (name n)
+    (close-on-stop true)
+    (state false)))
+
+(launch-many-worlds (m-big-bang (make-wor 5 5) "A") (m-big-bang (make-wor 10 10) "B") (m-big-bang (make-wor 15 15) "C"))
+
+
