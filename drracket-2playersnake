@@ -1,0 +1,202 @@
+(require picturing-programs)
+(require "posn-util.rkt")
+
+(define-struct sn (head body dir))
+
+(define-struct asn (sn1 sn2 apple))
+
+(define (apple-eaten1? apple sn)
+  (posn=? apple (sn-head sn)))
+
+(define (apple-eaten? apple los)
+  (cond
+    [(empty? los) false]
+    [(posn=? apple (sn-head (first los))) true]
+    [else (apple-eaten? apple (rest los))]))
+
+(define ex1 (make-asn (make-sn (make-posn 100 100)
+                               (list (make-posn 100 110)
+                                     (make-posn 100 120))
+                               (make-posn 0 -10))
+                      (make-sn (make-posn 300 200)
+                               (list (make-posn 300 210)
+                                     (make-posn 300 220))
+                               (make-posn 0 -10))
+                      (make-posn (+ (* 100 (random 5)) (* 10 (add1 (random 10)))) (+ (* 100 (random 5)) (* 10 (add1 (random 10)))))))
+
+(define (los m)
+  (list (asn-sn1 m) (asn-sn2 m)))
+
+(define (los-heads m)
+  (list (sn-head (asn-sn1 m)) (sn-head (asn-sn2 m))))
+
+(define (los-body m)
+  (first (list* (sn-body (asn-sn1 m)) (sn-body (asn-sn2 m)))))
+
+(define (draw-head posn img)
+  (place-image/posn
+   (square 10 "solid" "darkgreen")
+   posn
+   img))
+
+(define (draw-body m)
+  (draw-secondplayer (sn-body (asn-sn2 m)) (draw-firstplayer (sn-body (asn-sn1 m)))))
+
+(define (draw-secondplayer list img)
+  (cond
+    [(empty? list) img]
+    [else (place-image/posn (square 10 "solid" 'lightblue) (first list) (draw-secondplayer (rest list) img))]))
+
+(define (draw-firstplayer list)
+  (cond
+    [(empty? list) (square 500 "solid" 'black)]
+    [else (place-image/posn (square 10 "solid" 'green) (first list) (draw-firstplayer (rest list)))]))
+      
+(define (draw-h m)
+  (place-image/posn (square 10 "solid" 'red) (asn-apple m)
+                    (place-image/posn (square 10 "solid" 'darkblue) (sn-head (asn-sn2 m))
+                                      (place-image/posn (square 10 "solid" 'darkgreen) (sn-head (asn-sn1 m))
+                                                        (draw-body m)))))
+
+(define (key-h m key)
+  (cond
+    [(and (key=? key "w")
+          (not (posn=? (make-posn 0 10) (sn-dir (asn-sn1 m))))) (make-asn
+                                                                 (make-sn (sn-head (asn-sn1 m)) (sn-body (asn-sn1 m)) (make-posn 0 -10))
+                                                                 (asn-sn2 m)
+                                                                 (asn-apple m))]
+    [(and (key=? key "a")
+          (not (posn=? (make-posn 10 0) (sn-dir (asn-sn1 m))))) (make-asn
+                                                                 (make-sn (sn-head (asn-sn1 m)) (sn-body (asn-sn1 m)) (make-posn -10 0))
+                                                                 (asn-sn2 m)
+                                                                 (asn-apple m))]
+    [(and (key=? key "s")
+          (not (posn=? (make-posn 0 -10) (sn-dir (asn-sn1 m))))) (make-asn
+                                                                 (make-sn (sn-head (asn-sn1 m)) (sn-body (asn-sn1 m)) (make-posn 0 10))
+                                                                 (asn-sn2 m)
+                                                                 (asn-apple m))]
+    [(and (key=? key "d")
+          (not (posn=? (make-posn -10 0) (sn-dir (asn-sn1 m))))) (make-asn
+                                                                 (make-sn (sn-head (asn-sn1 m)) (sn-body (asn-sn1 m)) (make-posn 10 0))
+                                                                 (asn-sn2 m)
+                                                                 (asn-apple m))]
+    [(and (key=? key "up")
+          (not (posn=? (make-posn 0 10) (sn-dir (asn-sn2 m))))) (make-asn
+                                                                 (asn-sn1 m)
+                                                                 (make-sn (sn-head (asn-sn2 m)) (sn-body (asn-sn2 m)) (make-posn 0 -10))
+                                                                 (asn-apple m))]
+    [(and (key=? key "left")
+          (not (posn=? (make-posn 10 0) (sn-dir (asn-sn2 m))))) (make-asn
+                                                                 (asn-sn1 m)
+                                                                 (make-sn (sn-head (asn-sn2 m)) (sn-body (asn-sn2 m)) (make-posn -10 0))
+                                                                 (asn-apple m))]
+    [(and (key=? key "down")
+          (not (posn=? (make-posn 0 -10) (sn-dir (asn-sn2 m))))) (make-asn
+                                                                 (asn-sn1 m)
+                                                                 (make-sn (sn-head (asn-sn2 m)) (sn-body (asn-sn2 m)) (make-posn 0 10))
+                                                                 (asn-apple m))]
+    [(and (key=? key "right")
+          (not (posn=? (make-posn -10 0) (sn-dir (asn-sn2 m))))) (make-asn
+                                                                 (asn-sn1 m)
+                                                                 (make-sn (sn-head (asn-sn2 m)) (sn-body (asn-sn2 m)) (make-posn 10 0))
+                                                                 (asn-apple m))]
+    
+    [else m]))
+
+(define (eat-apple? appleposn heads)
+  (cond
+    [(empty? heads) false]
+    [(posn=? appleposn (first heads)) true]
+    [else (eat-apple? appleposn (rest heads))]))
+
+(define (is-clear? posn body)
+  (cond
+    [(empty? body) #true]
+    [(posn=? posn (first body)) #false]
+    [else (is-clear? posn (rest body))]))
+
+(define (apple-respawn m posn)
+  (cond
+    [(is-clear? posn (los-body m)) posn]
+    [else (apple-respawn m (make-posn (+ (* 100 (random 5)) (* 10 (add1 (random 10)))) (+ (* 100 (random 5)) (* 10 (add1 (random 10))))))]))
+
+(define (hit-snake? headposn los)
+  (cond
+    [(empty? los) #false]
+    [(posn=? headposn (first los)) #true]
+    [else (hit-snake? headposn (rest los))]))
+
+(define (hit-wall? headposn)
+  (cond
+    [(or (> (posn-x headposn) 500)
+         (> (posn-y headposn) 500)
+         (< (posn-x headposn) 0)
+         (< (posn-y headposn) 0)) true]
+    [else false]))
+
+(define (should-stop? m)
+  (cond
+    [(or (hit-snake? (sn-head (asn-sn1 m)) (sn-body (asn-sn2 m)))
+         (hit-snake? (sn-head (asn-sn2 m)) (sn-body (asn-sn1 m)))) true]
+    [(or (hit-snake? (sn-head (asn-sn1 m)) (sn-body (asn-sn1 m)))
+         (hit-snake? (sn-head (asn-sn2 m)) (sn-body (asn-sn2 m)))) true]
+    [(or (hit-wall? (sn-head (asn-sn1 m)))
+         (hit-wall? (sn-head (asn-sn2 m)))) true]
+    [else false]))
+
+(define (gameover m)
+  (overlay (text/font "GAME OVER" 56 "red"
+                             "Gill Sans" 'swiss 'normal 'bold #f)
+           (square 500 "solid" "black")))
+
+(define (update-head-pos posn1 posn2)
+  (add-posns posn1 posn2))
+
+(define (drop-last list)
+  (remove (list-ref list (- (length list) 1)) list))
+
+(define (update-snake m)
+  (make-asn (make-sn (update-head-pos (sn-head (asn-sn1 m))
+                                      (sn-dir (asn-sn1 m)))
+                     (list* (sn-head (asn-sn1 m))
+                            (drop-last (sn-body (asn-sn1 m))))
+                     (sn-dir (asn-sn1 m)))
+            (make-sn (update-head-pos (sn-head (asn-sn2 m))
+                                      (sn-dir (asn-sn2 m)))
+                     (list* (sn-head (asn-sn2 m))
+                            (drop-last (sn-body (asn-sn2 m))))
+                     (sn-dir (asn-sn2 m)))
+            (asn-apple m)))
+
+(define (who-eat-apple apple sn1 sn2)
+  (cond
+    [(posn=? apple sn1) "1"]
+    [(posn=? apple sn2) "2"]))
+
+(define (snake-grow m who)
+  (cond
+    [(string=? who "1") (make-asn (make-sn (update-head-pos (sn-head (asn-sn1 m))
+                                                            (sn-dir (asn-sn1 m)))
+                                           (list* (sn-head (asn-sn1 m)) (sn-body (asn-sn1 m)))
+                                           (sn-dir (asn-sn1 m)))
+                                  (asn-sn2 m)
+                                  (apple-respawn m (make-posn (+ (* 100 (random 5)) (* 10 (add1 (random 10)))) (+ (* 100 (random 5)) (* 10 (add1 (random 10)))))))]
+    [(string=? who "2") (make-asn (asn-sn1 m)
+                                  (make-sn (update-head-pos (sn-head (asn-sn2 m))
+                                                            (sn-dir (asn-sn2 m)))
+                                           (list* (sn-head (asn-sn2 m)) (sn-body (asn-sn2 m)))
+                                           (sn-dir (asn-sn2 m)))
+                                  (apple-respawn m (make-posn (+ (* 100 (random 5)) (* 10 (add1 (random 10)))) (+ (* 100 (random 5)) (* 10 (add1 (random 10)))))))]))
+
+(define (tick-h m)
+  (cond
+    [(eat-apple? (asn-apple m) (los-heads m)) (snake-grow m (who-eat-apple (asn-apple m) (sn-head (asn-sn1 m)) (sn-head (asn-sn2 m))))]
+    [else (update-snake m)]))
+
+
+(big-bang
+    ex1
+  (on-tick tick-h 0.1)
+  (on-draw draw-h)
+  (on-key key-h)
+  (stop-when should-stop? gameover))
