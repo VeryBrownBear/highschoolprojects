@@ -1,0 +1,52 @@
+(require picturing-programs)
+(require 2htdp/universe)
+
+(define active false)
+(define-struct wor (id a c l))
+
+(define (dhh l s)
+  (cond [(empty? l) (square 500 "solid" "transparent")]
+        [else (place-image (circle 50 s "pink") (posn-x (first l)) (posn-y (first l)) (dhh (rest l) s))]))
+
+(define (dh str)
+  (cond [(wor-a str) (dhh (wor-l str) "solid")]
+        [else (dhh (wor-l str) "outline")]))
+
+(define (draw-h str)
+  (overlay
+   (overlay/align "left" "top"
+                 (text (number->string (wor-id str)) 24 "black")
+                 (square 500 "solid" "transparent"))
+                 (dh str)
+                 (place-image (circle 50 "outline" "pink") (posn-x (wor-c str)) (posn-y (wor-c str)) (square 500 "solid" "white"))))
+
+(define (mouse-h str x y e)
+  (cond [(string=? "button-down" e) (make-wor (wor-id str) (wor-a str) (wor-c str) (list* (make-posn x y) (wor-l str)))]
+        [else (make-wor (wor-id str) (wor-a str) (make-posn x y) (wor-l str))]))
+
+(define (key-h str e)
+  (cond [(string=? "c" e) (make-wor (wor-id str) (wor-a str) (wor-c str) (list ))]
+        [(string=? "q" e) (make-package str -1)]
+        [(string=? "r" e) (make-package str (+ (random 4) 1))]
+        [else (make-package str (wor-id str))]))
+
+(define (receive-h str m)
+  (cond [(= m -1) (exit)]
+        [(= m (wor-id str)) (make-wor (wor-id str) true (wor-c str) (wor-l str))]
+        [else (make-wor (wor-id str) false (wor-c str) (wor-l str))]))
+
+(define (mbb id a c l n)
+  (big-bang (make-wor id a c l)
+    (on-key key-h)
+    (on-draw draw-h)
+    (on-receive receive-h)
+    (on-mouse mouse-h)
+    (register LOCALHOST)
+    (name n)
+    (close-on-stop true)
+    (state false)))
+
+(launch-many-worlds (mbb 1 false (make-posn 0 0) (list (make-posn (random 501) (random 501))) "1")
+                    (mbb 2 false (make-posn 0 0) (list (make-posn (random 501) (random 501))) "2")
+                    (mbb 3 false (make-posn 0 0) (list (make-posn (random 501) (random 501))) "3")
+                    (mbb 4 false (make-posn 0 0) (list (make-posn (random 501) (random 501))) "4"))
